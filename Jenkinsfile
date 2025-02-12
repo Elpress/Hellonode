@@ -1,17 +1,41 @@
-node {
-    def app
+pipeline {
+    agent any
 
-    stage('Clone repository') {
-        /* Let's make sure we have the repository cloned to our workspace */
+    stages {
+        stage('Clone repository') {
+            steps {
+                checkout scm
+            }
+        }
 
-        checkout scm
+        stage('Build image') {
+            steps {
+                script {
+                    app = docker.build("releaseworks/hellonode")
+                }
+            }
+        }
+
+        stage('Scan image') {
+            steps {
+                script {
+                    // Exécuter le scan avec Grype et capturer la sortie
+                    def scanOutput = sh(script: "grype releaseworks/hellonode", returnStdout: true).trim()
+
+                    // Afficher la sortie du scan
+                    echo "Scan Output: ${scanOutput}"
+
+                    // Optionnel : Sauvegarder la sortie dans un fichier
+                    writeFile file: 'grype_scan_output.txt', text: scanOutput
+                }
+            }
+        }
     }
 
-    stage('Build image') {
-        /* This builds the actual image; synonymous to
-         * docker build on the command line */
-
-        app = docker.build("releaseworks/hellonode")
+    post {
+        always {
+            cleanWs()
+        }
     }
-
 }
+
