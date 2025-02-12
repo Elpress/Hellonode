@@ -13,6 +13,9 @@ pipeline {
                 script {
                     // Construire l'image Docker
                     app = docker.build("releaseworks/hellonode")
+
+                    // Vérifier que l'image a été construite
+                    sh "docker images | grep releaseworks/hellonode"
                 }
             }
         }
@@ -22,6 +25,9 @@ pipeline {
                 script {
                     // Enregistrer l'image localement
                     sh "docker save -o hellonode.tar releaseworks/hellonode"
+
+                    // Vérifier que le fichier a été créé
+                    sh "ls -l hellonode.tar"
                 }
             }
         }
