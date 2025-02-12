@@ -12,7 +12,7 @@ pipeline {
             steps {
                 script {
                     // Construire l'image Docker avec Podman
-                    app = podman.build("releaseworks/hellonode")
+                    app = docker.build("releaseworks/hellonode")
                 }
             }
         }
@@ -21,7 +21,7 @@ pipeline {
             steps {
                 script {
                     // Enregistrer l'image localement avec Podman
-                    sh "podman save -o hellonode.tar localhost/releaseworks/hellonode"
+                    sh "docker save -o hellonode.tar localhost/releaseworks/hellonode"
 
                     // Vérifier que le fichier a été créé
                     sh "ls -l hellonode.tar"
