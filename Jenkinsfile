@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME = "houmeyra/hellonode"
         IMAGE_TAG = "latest"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // ID de vos credentials Docker Hub
-        EMAIL_RECIPIENTS = 'meweelvis.balo@orange-sonatel.com;aicha.ba1@orange-sonatel.com' // Remplacez par les adresses emails des destinataires
+        EMAIL_RECIPIENTS = 'meweelvis.balo@orange-sonatel.com,aicha.ba1@orange-sonatel.com' // Remplacez par les adresses emails des destinataires
     }
 
     stages {
@@ -13,6 +13,21 @@ pipeline {
             steps {
                 // Clone le dépôt Git
                 checkout scm
+            }
+        }
+
+        stage('Check disk space') {
+            steps {
+                script {
+                    // Vérifiez l'espace disque disponible
+                    def diskSpace = sh(script: 'df -h /home', returnStdout: true).trim()
+                    echo "Disk Space: ${diskSpace}"
+
+                    // Vérifiez si l'espace disque est suffisant
+                    if (diskSpace.contains("100%") || diskSpace.contains("99%")) {
+                        error "Insufficient disk space available to build the Docker image."
+                    }
+                }
             }
         }
 
