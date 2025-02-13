@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "getintodevops/hellonode"
         IMAGE_TAG = "latest"
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Remplacez par l'ID de vos credentials Docker Hub
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // ID de vos credentials Docker Hub
     }
 
     stages {
@@ -24,16 +24,19 @@ pipeline {
             }
         }
 
-	stage('Push image') {
-        /* Finally, we'll push the image with two tags:
-         * First, the incremental build number from Jenkins
-         * Second, the 'latest' tag.
-         * Pushing multiple tags is cheap, as all the layers are reused. */
-        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-            app.push("${env.BUILD_NUMBER}")
-            app.push("latest")
+        stage('Push image') {
+            steps {
+                script {
+                    // Pousser l'image avec deux tags :
+                    // 1. Le numéro de build incrémental de Jenkins
+                    // 2. Le tag 'latest'
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        app.push("${env.BUILD_NUMBER}")
+                        app.push("latest")
+                    }
+                }
+            }
         }
-    }
 
         stage('Scan image') {
             steps {
@@ -44,7 +47,7 @@ pipeline {
                     // Afficher la sortie du scan
                     echo "Scan Output: ${scanOutput}"
 
-                    // Optionnel : Sauvegarder la sortie dans un fichier
+                    // Sauvegarder la sortie dans un fichier
                     writeFile file: 'grype_scan_output.txt', text: scanOutput
                 }
             }
