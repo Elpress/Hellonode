@@ -65,6 +65,9 @@ pipeline {
 
                     // Sauvegarder la sortie dans un fichier
                     writeFile file: 'grype_scan_output.txt', text: scanOutput
+
+                    // Stocker la sortie dans une variable d'environnement pour une utilisation ultérieure
+                    env.SCAN_OUTPUT = scanOutput
                 }
             }
         }
@@ -76,7 +79,7 @@ pipeline {
                     emailext (
                         to: "${EMAIL_RECIPIENTS}",
                         subject: "Résultats du Scan de Sécurité pour ${IMAGE_NAME}:${IMAGE_TAG}",
-                        body: "Veuillez trouver ci-joint les résultats du scan de sécurité pour l'image Docker ${IMAGE_NAME}:${IMAGE_TAG}.\n\n${scanOutput}",
+                        body: "Veuillez trouver ci-joint les résultats du scan de sécurité pour l'image Docker ${IMAGE_NAME}:${IMAGE_TAG}.\n\n${env.SCAN_OUTPUT}",
                         attachments: 'grype_scan_output.txt'
                     )
                 }
