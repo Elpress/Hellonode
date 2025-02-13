@@ -5,6 +5,7 @@ pipeline {
         IMAGE_NAME = "houmeyra/hellonode"
         IMAGE_TAG = "latest"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // ID de vos credentials Docker Hub
+        EMAIL_RECIPIENTS = 'meweelvis.balo@orange-sonatel.com;aicha.ba1@orange-sonatel.com' // Remplacez par les adresses emails des destinataires
     }
 
     stages {
@@ -52,6 +53,20 @@ pipeline {
                 }
             }
         }
+
+        stage('Send email notification') {
+            steps {
+                script {
+                    // Envoyer un email avec les résultats du scan
+                    emailext (
+                        to: "${EMAIL_RECIPIENTS}",
+                        subject: "Résultats du Scan de Sécurité pour ${IMAGE_NAME}:${IMAGE_TAG}",
+                        body: "Veuillez trouver ci-joint les résultats du scan de sécurité pour l'image Docker ${IMAGE_NAME}:${IMAGE_TAG}.\n\n${scanOutput}",
+                        attachments: 'grype_scan_output.txt'
+                    )
+                }
+            }
+        }
     }
 
     post {
@@ -61,4 +76,3 @@ pipeline {
         }
     }
 }
-
