@@ -1,54 +1,36 @@
-pipeline {
-    agent any
+node {
+    def app
 
-    stages {
-        stage('Clone repository') {
-            steps {
-                checkout scm
-            }
-        }
+    stage('Clone repository') {
+        /* Let's make sure we have the repository cloned to our workspace */
 
-        stage('Build image') {
-            steps {
-                script {
-                    // Construire l'image Docker avec Podman
-                    app = docker.build("releaseworks/hellonode")
-                }
-            }
-        }
+        checkout scm
+    }
 
-        stage('Save image locally') {
-            steps {
-                script {
-                    // Enregistrer l'image localement avec Podman
-                    sh "docker save -o hellonode.tar localhost/releaseworks/hellonode"
+    stage('Build image') {
+        /* This builds the actual image; synonymous to
+         * docker build on the command line */
 
-                    // Vérifier que le fichier a été créé
-                    sh "ls -l hellonode.tar"
-                }
-            }
-        }
+        app = docker.build("getintodevops/hellonode")
+    }
 
-        stage('Scan image') {
-            steps {
-                script {
-                    // Scanner l'image Docker locale avec Grype
-                    def scanOutput = sh(script: "grype oci-archive:hellonode.tar", returnStdout: true).trim()
+    stage('Test image') {
+        /* Ideally, we would run a test framework against our image.
+         * For this example, we're using a Volkswagen-type approach ;-) */
 
-                    // Afficher la sortie du scan
-                    echo "Scan Output: ${scanOutput}"
-
-                    // Optionnel : Sauvegarder la sortie dans un fichier
-                    writeFile file: 'grype_scan_output.txt', text: scanOutput
-                }
-            }
+        app.inside {
+            sh 'echo "Tests passed"'
         }
     }
 
-    post {
-        always {
-            cleanWs()
+    stage('Push image') {
+        /* Finally, we'll push the image with two tags:
+         * First, the incremental build number from Jenkins
+         * Second, the 'latest' tag.
+         * Pushing multiple tags is cheap, as all the layers are reused. */
+        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+            app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
         }
     }
 }
-
