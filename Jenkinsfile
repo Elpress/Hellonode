@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "getintodevops/hellonode"
+        IMAGE_NAME = "elvis/hellonode"
         IMAGE_TAG = "latest"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // ID de vos credentials Docker Hub
     }
