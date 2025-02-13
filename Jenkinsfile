@@ -24,17 +24,16 @@ pipeline {
             }
         }
 
-        stage('Push image to Docker Hub') {
-            steps {
-                script {
-                    // Pousser l'image vers Docker Hub
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        app.push(IMAGE_TAG)
-                        app.push('latest') // Optionnel : tagger l'image comme 'latest'
-                    }
-                }
-            }
+	stage('Push image') {
+        /* Finally, we'll push the image with two tags:
+         * First, the incremental build number from Jenkins
+         * Second, the 'latest' tag.
+         * Pushing multiple tags is cheap, as all the layers are reused. */
+        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+            app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
         }
+    }
 
         stage('Scan image') {
             steps {
