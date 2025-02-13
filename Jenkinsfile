@@ -80,7 +80,7 @@ pipeline {
                         to: "${EMAIL_RECIPIENTS}",
                         subject: "Résultats du Scan de Sécurité pour ${IMAGE_NAME}:${IMAGE_TAG}",
                         body: "Veuillez trouver ci-joint les résultats du scan de sécurité pour l'image Docker ${IMAGE_NAME}:${IMAGE_TAG}.\n\n${env.SCAN_OUTPUT}",
-                        attachments: 'grype_scan_output.txt'
+                        attachmentsPattern: 'grype_scan_output.txt'
                     )
                 }
             }
