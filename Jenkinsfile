@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME = "houmeyra/hellonode"
         IMAGE_TAG = "latest"
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // ID de vos credentials Docker Hub
-        EMAIL_RECIPIENTS = 'meweelvis.balo@orange-sonatel.com,aicha.ba1@orange-sonatel.com' // Remplacez par les adresses emails des destinataires
+        EMAIL_RECIPIENTS = 'elvisbalo9@gmail.com' // Remplacez par les adresses emails des destinataires
     }
 
     stages {
