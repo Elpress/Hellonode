@@ -1,36 +1,62 @@
-node {
-    def app
+pipeline {
+    agent any
 
-    stage('Clone repository') {
-        /* Let's make sure we have the repository cloned to our workspace */
-
-        checkout scm
+    environment {
+        IMAGE_NAME = "getintodevops/hellonode"
+        IMAGE_TAG = "latest"
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Remplacez par l'ID de vos credentials Docker Hub
     }
 
-    stage('Build image') {
-        /* This builds the actual image; synonymous to
-         * docker build on the command line */
+    stages {
+        stage('Clone repository') {
+            steps {
+                // Clone le dépôt Git
+                checkout scm
+            }
+        }
 
-        app = docker.build("getintodevops/hellonode")
-    }
+        stage('Build image') {
+            steps {
+                script {
+                    // Construire l'image Docker
+                    app = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                }
+            }
+        }
 
-    stage('Test image') {
-        /* Ideally, we would run a test framework against our image.
-         * For this example, we're using a Volkswagen-type approach ;-) */
+        stage('Push image to Docker Hub') {
+            steps {
+                script {
+                    // Pousser l'image vers Docker Hub
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        app.push(IMAGE_TAG)
+                        app.push('latest') // Optionnel : tagger l'image comme 'latest'
+                    }
+                }
+            }
+        }
 
-        app.inside {
-            sh 'echo "Tests passed"'
+        stage('Scan image') {
+            steps {
+                script {
+                    // Scanner l'image Docker depuis Docker Hub avec Grype
+                    def scanOutput = sh(script: "grype ${IMAGE_NAME}:${IMAGE_TAG}", returnStdout: true).trim()
+
+                    // Afficher la sortie du scan
+                    echo "Scan Output: ${scanOutput}"
+
+                    // Optionnel : Sauvegarder la sortie dans un fichier
+                    writeFile file: 'grype_scan_output.txt', text: scanOutput
+                }
+            }
         }
     }
 
-    stage('Push image') {
-        /* Finally, we'll push the image with two tags:
-         * First, the incremental build number from Jenkins
-         * Second, the 'latest' tag.
-         * Pushing multiple tags is cheap, as all the layers are reused. */
-        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-            app.push("${env.BUILD_NUMBER}")
-            app.push("latest")
+    post {
+        always {
+            // Nettoyer l'espace de travail
+            cleanWs()
         }
     }
 }
+
